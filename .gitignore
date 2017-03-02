@@ -1,0 +1,11 @@
+#modules
+**/node_modules/
+
+#IDEA
+.idea/
+*.iml
+#VS Code
+.vscode/
+Icon
+
+

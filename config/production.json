@@ -1,0 +1,10 @@
+{
+  "serverConfig": {
+    "sslKey": "config/ssl/nodestarter.key",
+    "sslCert": "config/ssl/nodestarter.crt",
+    "port": 443
+  },
+  "dbConfig": {
+    "contactPoint": []
+  }
+}

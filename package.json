@@ -1,0 +1,31 @@
+{
+  "name": "nodeCassandraStarter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node.js starter kit with cassandra database",
+  "scripts": {
+    "start": "NODE_ENV=uat node app.js",
+    "test": "NODE_ENV=test mocha --timeout 30000"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.7",
+    "body-parser": "~1.16.0",
+    "cassandra-driver": "^3.2.0",
+    "chalk": "^1.1.3",
+    "config": "^1.25.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.0",
+    "express": "~4.14.1",
+    "helmet": "^3.4.0",
+    "joi": "^10.2.1",
+    "moment": "^2.17.1",
+    "mongodb": "^2.2.24",
+    "morgan": "~1.7.0",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
+    "mocha": "^3.2.0"
+  }
+}

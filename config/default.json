@@ -1,0 +1,13 @@
+{
+  "serverConfig": {
+    "port": 3001
+  },
+  "dbConfig": {
+    "contactPoint": []
+  },
+  "authConfig": {
+    "port": 3000,
+    "host": "localhost",
+    "path": "/"
+  }
+}
