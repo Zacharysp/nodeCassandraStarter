@@ -46,12 +46,12 @@ var dbError = function (err) {
 
 module.exports.execute = function (query, items, callback) {
     if (callback) {
-        client.execute(query, items, function (err, result) {
+        client.execute(query, items, {prepare: true}, function (err, result) {
             dbResultCB(err, result, callback);
         });
     } else {
         return new Promise(function (resolve, reject) {
-            client.execute(query, items, function (err, result) {
+            client.execute(query, items, {prepare: true}, function (err, result) {
                 if (err) reject(dbError(err));
                 else {
                     if (result != null && result.rows.length > 0) {
