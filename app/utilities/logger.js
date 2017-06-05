@@ -1,13 +1,11 @@
 /**
  * Created by dzhang on 2/17/17.
  */
+const winston = require('winston');
+const path = require('path');
+const PROJECT_ROOT = path.join(__dirname, '..');
 
-"use strict";
-var winston = require('winston');
-var path = require('path');
-var PROJECT_ROOT = path.join(__dirname, '..');
-
-var logger = new winston.Logger();
+let logger = new winston.Logger();
 
 logger.add(winston.transports.Console, {
     prettyPrint: true,
@@ -17,64 +15,22 @@ logger.add(winston.transports.Console, {
 
 logger.cli();
 
-module.exports.info = function () {
-    logger.info.apply(logger, formatLogArguments(arguments))
-};
-
-module.exports.warn = function () {
-    logger.warn.apply(logger, formatLogArguments(arguments))
-};
-
-module.exports.error = function () {
-    logger.error.apply(logger, formatLogArguments(arguments))
-};
-
-module.exports.dev = function () {
-    if(process.env.NODE_ENV == 'development'){
-        logger.data.apply(logger, formatLogArguments(arguments))
-    }
-};
-
-
-/**
- * Attempts to add file and line number info to the given log arguments.
- */
-function formatLogArguments(args) {
-    if (process.env.NODE_ENV == 'development' || process.env.NODE_ENV == 'uat') {
-        args = Array.prototype.slice.call(args);
-
-        var stackInfo = getStackInfo(1);
-
-        if (stackInfo) {
-            // get file path relative to project root
-            var calleeStr = '(' + stackInfo.relativePath + ':' + stackInfo.line + ')';
-
-            if (typeof (args[0]) === 'string') {
-                args[0] = calleeStr + ' ' + args[0]
-            } else {
-                args.unshift(calleeStr)
-            }
-        }
-    }
-    return args
-}
-
 /**
  * Parses and returns info about the call stack at the given index.
  */
-function getStackInfo (stackIndex) {
+const getStackInfo = (stackIndex) => {
     // get call stack, and analyze it
     // get all file, method, and line numbers
-    var stacklist = (new Error()).stack.split('\n').slice(3);
+    let stacklist = (new Error()).stack.split('\n').slice(3);
 
     // stack trace format:
     // http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
     // do not remove the regex expresses to outside of this method (due to a BUG in node.js)
-    var stackReg = /at\s+(.*)\s+\((.*):(\d*):(\d*)\)/gi;
-    var stackReg2 = /at\s+()(.*):(\d*):(\d*)/gi;
+    let stackReg = /at\s+(.*)\s+\((.*):(\d*):(\d*)\)/gi;
+    let stackReg2 = /at\s+()(.*):(\d*):(\d*)/gi;
 
-    var s = stacklist[stackIndex] || stacklist[0];
-    var sp = stackReg.exec(s) || stackReg2.exec(s);
+    let s = stacklist[stackIndex] || stacklist[0];
+    let sp = stackReg.exec(s) || stackReg2.exec(s);
 
     if (sp && sp.length === 5) {
         return {
@@ -86,4 +42,45 @@ function getStackInfo (stackIndex) {
             stack: stacklist.join('\n')
         }
     }
-}
+};
+
+/**
+ * Attempts to add file and line number info to the given log arguments.
+ */
+const formatLogArguments = (args) => {
+    if (process.env.NODE_ENV == 'development' || process.env.NODE_ENV == 'uat') {
+        args = Array.prototype.slice.call(args);
+
+        let stackInfo = getStackInfo(1);
+
+        if (stackInfo) {
+            // get file path relative to project root
+            let calleeStr = '(' + stackInfo.relativePath + ':' + stackInfo.line + ')';
+
+            if (typeof (args[0]) === 'string') {
+                args[0] = calleeStr + ' ' + args[0]
+            } else {
+                args.unshift(calleeStr)
+            }
+        }
+    }
+    return args
+};
+
+module.exports = {
+    info() {
+        logger.info.apply(logger, formatLogArguments(arguments))
+    },
+    warn() {
+        logger.warn.apply(logger, formatLogArguments(arguments))
+    },
+    error() {
+        logger.error.apply(logger, formatLogArguments(arguments))
+    },
+    dev() {
+        if(process.env.NODE_ENV == 'development'){
+            logger.data.apply(logger, formatLogArguments(arguments))
+        }
+    }
+};
+

@@ -2,13 +2,12 @@
  * Created by dzhang on 2/6/17.
  */
 "use strict";
-var config = require('config');
-var cql = require('cassandra-driver');
-var dbConfig = config.get('dbConfig');
+const config = require('config');
+const cql = require('cassandra-driver');
+const dbConfig = config.get('dbConfig');
+const Promise = require('bluebird');
 
-var Promise = require("bluebird");
-
-var options = {};
+let options = {};
 options.contactPoints = process.env.CASSANDRA_URL && process.env.CASSANDRA_URL.split(',') || dbConfig.contactPoint;
 options.authProvider = new cql.auth.PlainTextAuthProvider(
     process.env.CASSANDRA_USERNAME || dbConfig.username,
@@ -19,9 +18,9 @@ options.keyspace = process.env.CASSANDRA_KEYSPACE || dbConfig.keyspace;
 /**
  * create singleton cassandra database connection
  */
-var client = new cql.Client(options);
+let client = new cql.Client(options);
 
-client.connect(function (err) {
+client.connect((err) => {
     if (!err) {
         logger.info("Connection to Cassandra is ready.");
     }
@@ -32,7 +31,7 @@ client.connect(function (err) {
  * @param err
  * @returns {*}
  */
-var dbError = function (err) {
+let dbError = (err) => {
     if (err == null) {
         err = new Error();
         Error.captureStackTrace(err);
@@ -44,17 +43,17 @@ var dbError = function (err) {
     return err
 };
 
-module.exports.execute = function (query, items, callback) {
+module.exports.execute = (query, items, callback) => {
     if (callback) {
-        client.execute(query, items, {prepare: true}, function (err, result) {
+        client.execute(query, items, {prepare: true}, (err, result) => {
             dbResultCB(err, result, callback);
         });
     } else {
-        return new Promise(function (resolve, reject) {
-            client.execute(query, items, {prepare: true}, function (err, result) {
+        return new Promise((resolve, reject) => {
+            client.execute(query, items, {prepare: true}, (err, result) => {
                 if (err) reject(dbError(err));
                 else {
-                    if (result != null && result.rows.length > 0) {
+                    if (result != null && result.rows != null && result.rows.length > 0) {
                         resolve(result.rows);
                     }
                     else resolve();
@@ -64,10 +63,52 @@ module.exports.execute = function (query, items, callback) {
     }
 };
 
+module.exports.batch = (queries, callback) => {
+    if (callback) {
+        client.batch(queries, {prepare: true}, (err) => {
+            if (err) callback(dbError(err));
+            callback();
+        });
+    } else {
+        return new Promise((resolve, reject) => {
+            client.batch(queries, {prepare: true}, (err) => {
+                if (err) reject(dbError(err));
+                resolve();
+            });
+        })
+    }
+};
+
+module.exports.eachRow = (query, items, fetchSize, pageState, callback) => {
+    const options = {
+        prepare: true,
+        fetchSize: fetchSize
+    };
+    if (pageState) options.pageState = pageState;
+    if (callback) {
+        client.eachRow(query, items, options, (n, row) => {
+            // Row callback.
+            logger.info(n, row)
+        }, (err, result) => {
+            dbResultCB(err, result, callback);
+        });
+    } else {
+        return new Promise((resolve, reject) => {
+            client.eachRow(query, items, options, (n, row) => {
+                // Row callback.
+                logger.info(n, row)
+            }, (err, result) => {
+                if (err) reject(dbError(err));
+                resolve(result);
+            });
+        })
+    }
+};
+
 function dbResultCB(err, result, callback) {
     if (err) callback(dbError(err));
     else {
-        if (result != null && result.rows.length > 0) {
+        if (result != null && result.rows != null && result.rows.length > 0) {
             callback(null, result.rows);
         }
         else callback();

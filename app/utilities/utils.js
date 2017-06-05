@@ -5,23 +5,24 @@
 
 global.logger = require('./logger');
 
-var http = require('http');
-var https = require('https');
-var config = require('config');
-var authConfig = config.has('authConfig') ? config.get('authConfig') : {};
+const http = require('http');
+const https = require('https');
+const config = require('config');
+const authConfig = config.has('authConfig') ? config.get('authConfig') : {};
 
-var ServerError = require('./error').ServerError;
+const ServerError = require('./error').ServerError;
 
-var Promise = require('bluebird');
-var Joi = require('joi');
-var joiValidate = Promise.promisify(Joi.validate);
+const Promise = require('bluebird');
+const Joi = require('joi');
+const joiValidate = Promise.promisify(Joi.validate);
+
 /**
  * handle fail response
  * @param res
  * @returns {Function}
  */
-exports.handleFailResponse = function (res){
-    return function(err) {
+exports.handleFailResponse = (res) => {
+    return (err) => {
         if (err.name == null) {
             err = new ServerError();
         }
@@ -43,7 +44,7 @@ exports.handleFailResponse = function (res){
                     res.status(500).send(handleResponse(err.code, err.publicMessage));
                 }
                 break;
-            //handle bad request error response
+            //handle not found error response
             default:
                 res.status(400).send(handleResponse(err.code, err.message));
         }
@@ -55,10 +56,34 @@ exports.handleFailResponse = function (res){
  * @param res
  * @returns {Function}
  */
-exports.handleSuccessResponse = function (res) {
-    return function (result) {
-        res.send(handleResponse(0, 'success', result));
+exports.handleSuccessResponse = (res) => {
+    return (result, otherType) => {
+        if (otherType) {
+            res.writeHead(200, {
+                'Content-Type': otherType,
+                'Content-Length': result.length
+            });
+            res.end(result);
+        }
+        else res.send(handleResponse(0, 'success', result));
     };
+};
+
+/**
+ * validate body with joi, return promise
+ * @param validateObj
+ * @param schemaObj
+ * @param options
+ * @returns {*}
+ */
+exports.validatePromise = (validateObj, schemaObj, options) => {
+    /**
+     * Joi validation
+     */
+    if (!options) options = {};
+    options.allowUnknown = true;
+    options.abortEarly = false;
+    return joiValidate(validateObj, schemaObj, options)
 };
 
 /**
@@ -68,7 +93,7 @@ exports.handleSuccessResponse = function (res) {
  * @param data
  * @returns {{data: *, status: {code: *, msg: *}}}
  */
-function handleResponse(code, msg, data) {
+const handleResponse = (code, msg, data) => {
     return {
         data: data,
         status: {
@@ -76,97 +101,19 @@ function handleResponse(code, msg, data) {
             msg: msg
         }
     }
-}
+};
 
 /**
  * construct joi error message to one line
  * @param err
  * @returns {string}
  */
-function displayJoiError (err){
-    var msg = "";
+const displayJoiError = (err) => {
+    let msg = "";
     err.details.forEach(function(data){
         msg += data.message;
         msg += ', '
     });
     return msg;
-}
-
-exports.validatePromise = function (validateObj, schemaObj, options) {
-    /**
-     * Joi validation
-     */
-    if (!options) options = {};
-    options.abortEarly = false;
-    return joiValidate(validateObj, schemaObj, options)
 };
 
-//authenticate bearer token with auth server
-exports.authenticate = function (req, res, next) {
-    if (!req.headers.authorization) {
-        var err = new Error('Authorization header should be provided');
-        res.status(400);
-        res.send({
-            message: err.message,
-            error: err
-        });
-    }else {
-        var postData = JSON.stringify(req.body);
-        var options = {
-            host: process.env.AUTH_HOST || authConfig.host,
-            port: process.env.AUTH_PORT || authConfig.port,
-            path: authConfig.path,
-            method: "POST",
-            headers: {
-                authorization: req.headers.authorization,
-                "Content-Type": "application/json",
-                "Content-Length": Buffer.byteLength(postData)
-            },
-            rejectUnauthorized: false,
-            agent: false
-        };
-        // Auth with https server
-        // if (process.env.NODE_ENV == 'production') {
-        //     authReq = https.request(options, authCallback(next, req, res));
-        // } else {
-        var authReq = http.request(options, authCallback(next, req, res));
-
-        authReq.end(postData);
-
-        authReq.on('error', function (e) {
-            logger.error('error validating token ', e);
-            var serverError = new ServerError();
-            serverError.stack = e.stack;
-            next(serverError);
-        });
-    }
-};
-
-function authCallback(next, req, res) {
-    return function (response) {
-        if (response.statusCode === 200) {
-            response.on('data', function (chunk) {
-                var result = JSON.parse(chunk).data;
-                logger.dev(result, 'response from auth api');
-                req.authInfo = {
-                    userId: result.userId,
-                    expires: result.expires
-                };
-                next();
-            });
-        }else {
-            for (var i in response.headers) {
-                if (response.headers.hasOwnProperty(i)) {
-                    res.set(i, response.headers[i]);
-                }
-            }
-            res.status(response.statusCode);
-            response.on('data', function (chunk) {
-                res.write(chunk);
-            });
-            response.on('end', function () {
-                res.end();
-            });
-        }
-    }
-}
