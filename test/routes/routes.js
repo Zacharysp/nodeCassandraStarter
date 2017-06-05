@@ -2,11 +2,11 @@
  * Created by dzhang on 2/21/17.
  */
 
-var chaiHttp = require('chai-http');
-var chai = require('chai');
-var logger = require('../../app/utilities/logger');
-var app = require('../../app');
-var expect = chai.expect;
+const chaiHttp = require('chai-http');
+const chai = require('chai');
+const logger = require('../../app/utilities/logger');
+const app = require('../../app');
+const expect = chai.expect;
 
 chai.use(chaiHttp);
 
@@ -19,7 +19,7 @@ before(function (done) {
 });
 
 
-var atoken = '5303b770af1eb91e085b54f21fe9fe93cd74fde3';
+let atoken = '5303b770af1eb91e085b54f21fe9fe93cd74fde3';
 
 describe('Live Connect API', function () {
 
