@@ -1,10 +1,10 @@
 /**
  * Created by dzhang on 2/27/17.
  */
-"use strict";
-const router = require('express').Router();
-const userCtrl = require('../controllers/findUser');
 
+const express = require('express');
+const router = new express.Router();
+const userCtrl = require('../controllers/findUser');
 
 router.get('/', userCtrl.callback);
 

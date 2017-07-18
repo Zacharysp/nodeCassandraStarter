@@ -1,10 +1,9 @@
 /**
  * Created by dzhang on 2/6/17.
  */
-"use strict";
 
 const express = require('express');
-const router = express.Router();
+const router = new express.Router();
 const util = require('./app/utilities');
 const app = express();
 

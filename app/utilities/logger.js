@@ -1,6 +1,7 @@
 /**
- * Created by dzhang on 2/17/17.
+ * Created by dzhang on 6/20/17.
  */
+
 const winston = require('winston');
 const path = require('path');
 const PROJECT_ROOT = path.join(__dirname, '..');
@@ -27,7 +28,7 @@ const getStackInfo = (stackIndex) => {
     // http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
     // do not remove the regex expresses to outside of this method (due to a BUG in node.js)
     let stackReg = /at\s+(.*)\s+\((.*):(\d*):(\d*)\)/gi;
-    let stackReg2 = /at\s+()(.*):(\d*):(\d*)/gi;
+    let stackReg2 = /at\s+(.*):(\d*):(\d*)/gi;
 
     let s = stacklist[stackIndex] || stacklist[0];
     let sp = stackReg.exec(s) || stackReg2.exec(s);
@@ -40,7 +41,7 @@ const getStackInfo = (stackIndex) => {
             pos: sp[4],
             file: path.basename(sp[2]),
             stack: stacklist.join('\n')
-        }
+        };
     }
 };
 
@@ -48,7 +49,7 @@ const getStackInfo = (stackIndex) => {
  * Attempts to add file and line number info to the given log arguments.
  */
 const formatLogArguments = (args) => {
-    if (process.env.NODE_ENV == 'development' || process.env.NODE_ENV == 'uat') {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'uat') {
         args = Array.prototype.slice.call(args);
 
         let stackInfo = getStackInfo(1);
@@ -58,28 +59,28 @@ const formatLogArguments = (args) => {
             let calleeStr = '(' + stackInfo.relativePath + ':' + stackInfo.line + ')';
 
             if (typeof (args[0]) === 'string') {
-                args[0] = calleeStr + ' ' + args[0]
+                args[0] = calleeStr + ' ' + args[0];
             } else {
-                args.unshift(calleeStr)
+                args.unshift(calleeStr);
             }
         }
     }
-    return args
+    return args;
 };
 
 module.exports = {
     info() {
-        logger.info.apply(logger, formatLogArguments(arguments))
+        logger.info.apply(null, formatLogArguments(arguments));
     },
     warn() {
-        logger.warn.apply(logger, formatLogArguments(arguments))
+        logger.warn.apply(null, formatLogArguments(arguments));
     },
     error() {
-        logger.error.apply(logger, formatLogArguments(arguments))
+        logger.error.apply(null, formatLogArguments(arguments));
     },
     dev() {
-        if(process.env.NODE_ENV == 'development'){
-            logger.data.apply(logger, formatLogArguments(arguments))
+        if (process.env.NODE_ENV === 'development') {
+            logger.data.apply(null, formatLogArguments(arguments));
         }
     }
 };

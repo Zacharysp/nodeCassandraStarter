@@ -10,25 +10,23 @@ const expect = chai.expect;
 
 chai.use(chaiHttp);
 
-before(function (done) {
+before((done) => {
     global.logger = logger;
-    setTimeout(function () {
+    setTimeout(() => {
         logger.info('Setting up cassandra connection');
-        done()
+        done();
     }, 2000);
 });
 
-
 let atoken = '5303b770af1eb91e085b54f21fe9fe93cd74fde3';
 
-describe('Live Connect API', function () {
-
-    describe('GET /user', function () {
-        it('should return user by user id', function (done) {
+describe('Live Connect API', () => {
+    describe('GET /user', () => {
+        it('should return user by user id', (done) => {
             chai.request(app)
                 .get('/contact')
                 .set('Authorization', 'Bearer ' + atoken) // permanent access token for testing purpose
-                .end(function (err, res) {
+                .end((err, res) => {
                     expect(err).to.be.null;
                     expect(res).to.have.status(200);
                     done();

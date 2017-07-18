@@ -2,9 +2,6 @@
  * Created by dzhang on 2/6/17.
  */
 
-
-"use strict";
-
 /**
  * url not found error
  * @param req
@@ -26,7 +23,7 @@ exports.notFound = (req, res, next) => {
  */
 exports.handleUnknownError = (err, req, res) => {
     logger.error(err);
-    if (process.env.NODE_ENV == 'development') {
+    if (process.env.NODE_ENV === 'development') {
         res.status(err.status || 500).send({
             status: {
                 code: err.code || 201,
@@ -35,7 +32,7 @@ exports.handleUnknownError = (err, req, res) => {
             }
         });
     } else {
-        let publicMessage = err.status == 404 ? err.message : 'server error';
+        let publicMessage = err.status === 404 ? err.message : 'server error';
         res.status(err.status || 500).send({
             status: {
                 code: err.code || 201,
